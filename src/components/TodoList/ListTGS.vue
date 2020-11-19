@@ -1,8 +1,8 @@
 <template>
     <v-main class="list">
-        <h3 class="text-h3 font-weight-medium mb-5">To Do List UGD</h3>
+        <h3 class="text-h3 font-weight-medium mb-5">To Do List TGS</h3>
         
-        <v-card>
+        <v-card style="margin: 2vh;" outlined elevation="2">
             <v-card-title>
                 <v-text-field
                     v-model="search"
@@ -53,7 +53,24 @@
                     delete
                 </v-icon>
             </template>
+
+            <template v-slot:[`item.check`]="{ item }">
+                <v-checkbox @change="checkItem(item)" v-bind:value="item.check"> <!-- v-bind:value for unchecked when do deleteSelected() -->
+                </v-checkbox>
+            </template>
             </v-data-table>
+        </v-card>
+        
+        <v-card v-if="isWantDel() == true" style="margin: 2vh;" outlined elevation="2">
+            <v-card-text class="text--primary">
+                <div>Delete Multiple</div>
+            </v-card-text>
+            <ul v-for="(todo, index) in todos" :key="index">
+                <li v-if="todo.check == true">{{ todo.task }}</li>
+            </ul>
+            <v-btn color="error" depressed @click="deleteSelected()" style="margin: 1vh">
+                HAPUS SEMUA
+            </v-btn>
         </v-card>
 
         <v-dialog v-model="dialog" persistent max-width="600px">
@@ -169,6 +186,7 @@ export default {
                 { text: "Priority", value: "priority" },
                 { text: "Note", value: "note" },
                 { text: "Actions", value: "actions" },
+                { text: "Select", value: "check" },
             ],
             headersSelesai: [
                 {
@@ -185,22 +203,26 @@ export default {
                     task: "bernafas",
                     priority: "Penting",
                     note: "huffttt",
+                    check: false,
                 },
                 {
                     task: "nongkrong",
                     priority: "Tidak penting",
                     note: "bersama tman2",
+                    check: false,
                 },
                 {
                     task: "masak",
                     priority: "Biasa",
                     note: "masak air 500ml",
+                    check: false,
                 },
             ],
             formTodo: {
                 task: null,
                 priority: null,
                 note: null,
+                check: false, //set default value for check
             },
             todosSelesai: [
                 
@@ -212,7 +234,6 @@ export default {
             let i;
             for(i = 0; i < this.todos.length; i++) {
                 if(this.todos[i].task==this.formTodo.task && this.todos[i].priority==this.formTodo.priority && this.todos[i].note==this.formTodo.note) {
-                    console.log("i: " + i);
                     this.todos[i].task = this.formTodo.task;
                     this.todos[i].priority = this.formTodo.priority;
                     this.todos[i].note = this.formTodo.note;
@@ -252,7 +273,34 @@ export default {
         },
         close(){
             this.dialogSelesai = false;
-        }
+        },
+        checkItem(item){ //do when user checked or unchecked v-checkbox
+            if(item.check == false){
+                item.check = true;
+            } else {
+                item.check = false;
+            }
+        },
+        deleteSelected(){ //check each todos.check, if true do splice
+            let i;
+            for(i=this.todos.length-1;i>=0;i--){
+                if(this.todos[i].check==true){
+                    this.formTodo = this.todos[i]; //copy value of item that want to delete
+                    this.todosSelesai.push(this.formTodo); //the deleted item pushed into array todosSelesai
+                    this.todos.splice(i,1);
+                }
+            }
+            this.resetForm();
+        },
+        isWantDel(){ //show v-card selected delete if found at least 1 item.check == true
+            let i;
+            for(i=0;i<this.todos.length;i++) {
+                if(this.todos[i].check == true) {
+                    return true;
+                }
+            }
+            return false;
+        },
     },
 };
 </script>
